@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ask my build log — portfolio FAQ bot</title>
+<meta name="description" content="A small FAQ chatbot that answers questions about my dev work, matched with TF-IDF cosine similarity.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF1F6;
+    --grid-line:rgba(27,42,74,0.07);
+    --panel:#FFFFFF;
+    --ink:#1B2A4A;
+    --ink-soft:#5C6B85;
+    --ink-faint:#92A0B8;
+    --accent:#FF6B4A;
+    --accent-soft:rgba(255,107,74,0.12);
+    --accent-ink:#7A2E1B;
+    --bot-bubble:#F3F1E9;
+    --border:rgba(27,42,74,0.12);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    min-height:100vh;
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 18px;
+  }
+
+  .app{
+    width:100%;
+    max-width:620px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  .masthead{padding:0 4px;}
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin:0 0 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--accent-ink);
+  }
+
+  .eyebrow::before{
+    content:'';
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+
+  .masthead h1{
+    margin:0 0 8px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(24px,4vw,30px);
+    line-height:1.2;
+    letter-spacing:-0.01em;
+  }
+
+  .masthead p{
+    margin:0;
+    font-size:14.5px;
+    line-height:1.5;
+    color:var(--ink-soft);
+    max-width:46ch;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:0 24px 48px -28px rgba(27,42,74,0.28);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .log{
+    height:380px;
+    overflow-y:auto;
+    padding:20px 20px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    scroll-behavior:smooth;
+  }
+
+  .log::-webkit-scrollbar{width:8px;}
+  .log::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+
+  .row{display:flex;flex-direction:column;max-width:84%;}
+  .row--bot{align-self:flex-start;align-items:flex-start;}
+  .row--user{align-self:flex-end;align-items:flex-end;}
+
+  .bubble{
+    padding:10px 14px;
+    border-radius:14px;
+    font-size:14.5px;
+    line-height:1.5;
+  }
+
+  .row--bot .bubble{
+    background:var(--bot-bubble);
+    color:var(--ink);
+    border-bottom-left-radius:4px;
+  }
+
+  .row--user .bubble{
+    background:var(--accent);
+    color:#FFF7F4;
+    border-bottom-right-radius:4px;
+  }
+
+  .match-tag{
+    margin-top:5px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--ink-faint);
+    letter-spacing:0.02em;
+  }
+
+  .typing .bubble{
+    display:inline-flex;
+    gap:4px;
+    align-items:center;
+    padding:13px 16px;
+  }
+
+  .typing-dot{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--ink-faint);
+    animation:bounce 1.1s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(2){animation-delay:0.15s;}
+  .typing-dot:nth-child(3){animation-delay:0.3s;}
+
+  @keyframes bounce{
+    0%,60%,100%{transform:translateY(0);opacity:0.5;}
+    30%{transform:translateY(-3px);opacity:1;}
+  }
+
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:12px 20px;
+    border-top:1px solid var(--border);
+  }
+
+  .chip{
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:12.5px;
+    font-weight:500;
+    padding:7px 13px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:background 0.15s ease,border-color 0.15s ease,color 0.15s ease;
+  }
+
+  .chip:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);}
+
+  .input-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 18px;
+    border-top:1px solid var(--border);
+  }
+
+  .prompt-glyph{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    color:var(--accent);
+    font-size:15px;
+  }
+
+  #userInput{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+    padding:6px 0;
+  }
+
+  #userInput::placeholder{color:var(--ink-faint);}
+
+  .send-btn{
+    border:none;
+    background:var(--ink);
+    color:#fff;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:9px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:background 0.15s ease,transform 0.1s ease;
+  }
+
+  .send-btn:hover{background:var(--accent-ink);}
+  .send-btn:active{transform:scale(0.96);}
+
+  .footnote{
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+    padding:0 4px;
+  }
+
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  @media (max-width:480px){
+    .log{height:340px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      animation-duration:0.001ms !important;
+      animation-iteration-count:1 !important;
+      scroll-behavior:auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="masthead">
+    <span class="eyebrow">Ask my build log</span>
+    <h1>Hi, I'm Harvi's portfolio assistant.</h1>
+    <p>Ask about projects, tech stack, education, or internships — every answer below is matched live with TF-IDF + cosine similarity, no fixed lookup table.</p>
+  </header>
+
+  <div class="panel">
+    <div class="log" id="log" aria-live="polite" aria-label="Chat log"></div>
+    <div class="chips" id="chips"></div>
+    <div class="input-row">
+      <span class="prompt-glyph" aria-hidden="true">&gt;</span>
+      <input id="userInput" type="text" placeholder="Type a question…" maxlength="200" autocomplete="off">
+      <button id="sendBtn" class="send-btn" type="button">Send</button>
+    </div>
+  </div>
+
+  <p class="footnote">No backend, no API calls — matching runs entirely in this page.</p>
+</div>
+
+<script>
+/* ---------- 1. Collect FAQs ----------
+   Each intent has several example phrasings ("examples") that all route to the
+   same canonical answer — this is the "intent matching" approach the task
+   brief calls out, rather than a flat 1-question-1-answer lookup. */
+const INTENTS = [
+  {
+    id: 'greeting',
+    examples: ['hi', 'hello', 'hey', 'good morning', 'yo', 'hii', 'hey there'],
+    answer: "Hey! I'm Harvi's portfolio assistant. Ask about projects, tech stack, education, or internships — or tap a suggestion below.",
+  },
+  {
+    id: 'projects',
+    examples: [
+      'what projects have you built', 'show me your projects', 'what have you made',
+      'tell me about your work', 'your portfolio projects', "what's on your github",
+      'what have you coded',
+    ],
+    answer: "Harvi's portfolio includes a language translator, an audio visualizer, an AI music generator trained on classical piano data, and a Python CLI trading bot for Binance Futures — plus this chatbot, all built from scratch.",
+  },
+  {
+    id: 'tech_stack',
+    examples: [
+      'what languages do you know', 'your tech stack', 'what technologies do you use',
+      'what programming languages', "what's your stack", 'do you know python',
+    ],
+    answer: "Mainly Python, JavaScript, C, and C#, with hands-on work in TensorFlow/Keras, Flutter, Node.js, and SQL.",
+  },
+  {
+    id: 'codealpha',
+    examples: [
+      'tell me about your codealpha internship', 'what is codealpha', 'your ai internship',
+      'current internship', 'what are you working on right now',
+    ],
+    answer: "Currently completing an AI internship at CodeAlpha, building four deliverables: a translation tool, this FAQ chatbot, an LSTM music generator, and an object detection app.",
+  },
+  {
+    id: 'education',
+    examples: [
+      "what's your educational background", 'where do you study', 'which college do you go to',
+      'your degree', 'what year are you in', 'where do you go to university',
+    ],
+    answer: "First-year B.Tech in Computer Science & Engineering at Graphic Era (Deemed to be University), Dehradun.",
+  },
+  {
+    id: 'open_to_work',
+    examples: [
+      'are you looking for an internship', 'are you open to opportunities', 'are you available for hire',
+      'are you looking for work', 'open to internships', 'can i hire you',
+    ],
+    answer: "Yes — actively applying for software development internships, especially roles in web development or applied AI.",
+  },
+  {
+    id: 'ai_experience',
+    examples: [
+      'have you worked with ai', 'machine learning experience', 'ai projects',
+      'do you know machine learning', 'have you trained a model',
+    ],
+    answer: "Yes — built an LSTM model trained on Bach chorales to generate original melodies. This chatbot itself uses TF-IDF and cosine similarity for matching, no external AI API.",
+  },
+  {
+    id: 'mobile_experience',
+    examples: [
+      'do you have mobile app experience', 'have you built apps', 'flutter experience',
+      'any mobile development', 'have you used flutter',
+    ],
+    answer: "Built a Flutter app end-to-end for a mobile internship challenge, including working through some tricky platform compatibility issues to ship a release build.",
+  },
+  {
+    id: 'github',
+    examples: [
+      "what's your github", 'github username', 'where can i see your code', 'link to your github',
+    ],
+    answer: 'github.com/harviesharma05-tech — all projects, including this one, are public there.',
+  },
+  {
+    id: 'interests',
+    examples: [
+      'what kind of projects do you enjoy', 'what are you interested in', 'your interests',
+      'what do you like building',
+    ],
+    answer: "Drawn to creative and animation-based projects — interactive, visual builds over plain CRUD apps, with a soft spot for clean, minimal design.",
+  },
+  {
+    id: 'contact',
+    examples: [
+      'how can i contact you', 'your email', 'get in touch', 'how do i reach you', 'contact info',
+    ],
+    answer: 'Best way to reach out is through GitHub or LinkedIn.',
+  },
+  {
+    id: 'proud_of',
+    examples: [
+      "what's your favorite project", 'what are you most proud of', 'best project you have built',
+    ],
+    answer: "Hard to pick one — the AI music generator was the most technically stretching, the audio visualizer was the most fun to build.",
+  },
+];
+
+const FALLBACK = "I don't have an answer for that one yet. Try asking about projects, tech stack, education, or internships — or tap a suggestion below.";
+const SUGGESTED_CHIPS = ['What have you built?', "What's your tech stack?", 'Open to internships?', 'Tell me about CodeAlpha'];
+
+/* ---------- 2. Preprocess: tokenize + clean ---------- */
+const STOPWORDS = new Set([
+  'a','an','the','is','are','am','do','does','did','have','has','had','i','you','your','yours',
+  'me','my','mine','it','its','this','that','these','those','to','of','for','in','on','at','with',
+  'about','what','which','who','whom','how','when','where','why','can','could','would','will',
+  'shall','should','be','been','being','and','or','but','if','so','as','than','then','there',
+  'here','was','were','tell','please','just','really',
+]);
+
+function tokenize(text){
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s']/g, ' ')
+    .split(/\s+/)
+    .filter(t => t.length > 0 && !STOPWORDS.has(t));
+}
+
+/* ---------- 3. Build TF-IDF vectors over every example phrase ---------- */
+const corpus = []; // { tokens, intentIndex, vector }
+INTENTS.forEach((intent, intentIndex) => {
+  intent.examples.forEach(example => {
+    corpus.push({ tokens: tokenize(example), intentIndex });
+  });
+});
+
+const documentFrequency = new Map();
+corpus.forEach(doc => {
+  new Set(doc.tokens).forEach(term => {
+    documentFrequency.set(term, (documentFrequency.get(term) || 0) + 1);
+  });
+});
+
+const totalDocs = corpus.length;
+function idf(term){
+  const df = documentFrequency.get(term) || 0;
+  return Math.log((totalDocs + 1) / (df + 1)) + 1; // smoothed idf, never zero
+}
+
+function tfidfVector(tokens){
+  const counts = new Map();
+  tokens.forEach(t => counts.set(t, (counts.get(t) || 0) + 1));
+  const total = tokens.length || 1;
+  const vector = new Map();
+  counts.forEach((count, term) => vector.set(term, (count / total) * idf(term)));
+  return vector;
+}
+
+corpus.forEach(doc => { doc.vector = tfidfVector(doc.tokens); });
+
+/* ---------- 4. Match via cosine similarity ---------- */
+function cosineSimilarity(a, b){
+  let dot = 0, normA = 0, normB = 0;
+  a.forEach((val, key) => {
+    normA += val * val;
+    if (b.has(key)) dot += val * b.get(key);
+  });
+  b.forEach(val => { normB += val * val; });
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+const MATCH_THRESHOLD = 0.18;
+
+function findBestIntent(userText){
+  const tokens = tokenize(userText);
+  if (tokens.length === 0) return null;
+  const queryVector = tfidfVector(tokens);
+
+  let best = { score: 0, intentIndex: -1 };
+  corpus.forEach(doc => {
+    const score = cosineSimilarity(queryVector, doc.vector);
+    if (score > best.score) best = { score, intentIndex: doc.intentIndex };
+  });
+  return best.score >= MATCH_THRESHOLD ? best : null;
+}
+
+/* ---------- 5. Chat UI wiring ---------- */
+const logEl = document.getElementById('log');
+const chipsEl = document.getElementById('chips');
+const inputEl = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function addBubble(text, sender, matchLabel){
+  const row = document.createElement('div');
+  row.className = `row row--${sender}`;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  row.appendChild(bubble);
+  if (matchLabel){
+    const tag = document.createElement('div');
+    tag.className = 'match-tag';
+    tag.textContent = matchLabel;
+    row.appendChild(tag);
+  }
+  logEl.appendChild(row);
+  logEl.scrollTop = logEl.scrollHeight;
+  return row;
+}
+
+function showTyping(){
+  const row = document.createElement('div');
+  row.className = 'row row--bot typing';
+  row.innerHTML = `<div class="bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+  logEl.appendChild(row);
+  logEl.scrollTop = logEl.scrollHeight;
+  return row;
+}
+
+function respondTo(userText){
+  const typingRow = showTyping();
+  const delay = 350 + Math.random() * 350;
+  setTimeout(() => {
+    typingRow.remove();
+    const match = findBestIntent(userText);
+    if (match){
+      const intent = INTENTS[match.intentIndex];
+      const pct = Math.round(match.score * 100);
+      addBubble(intent.answer, 'bot', `⌁ ${intent.id} · ${pct}% match`);
+    } else {
+      addBubble(FALLBACK, 'bot');
+    }
+  }, delay);
+}
+
+function sendMessage(text){
+  const trimmed = text.trim();
+  if (!trimmed) return;
+  addBubble(trimmed, 'user');
+  inputEl.value = '';
+  respondTo(trimmed);
+}
+
+sendBtn.addEventListener('click', () => sendMessage(inputEl.value));
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMessage(inputEl.value);
+});
+
+SUGGESTED_CHIPS.forEach(label => {
+  const chip = document.createElement('button');
+  chip.className = 'chip';
+  chip.type = 'button';
+  chip.textContent = label;
+  chip.addEventListener('click', () => sendMessage(label));
+  chipsEl.appendChild(chip);
+});
+
+addBubble("Hey! I'm Harvi's portfolio assistant. Ask me anything about his projects, stack, or internships.", 'bot');
+</script>
+</body>
+</html>
