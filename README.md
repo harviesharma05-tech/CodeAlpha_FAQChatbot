@@ -13,8 +13,8 @@ A FAQ chatbot about my dev portfolio — projects, tech stack, education, intern
 ## Run it
 Open `index.html` in any browser.
 
-## Before you publish
-The FAQ content (`INTENTS` array near the top of the script) is written generically from my own background — double check it still matches reality, and update the contact answer with a real link before sharing.
+## Sourced from the real resume
+The FAQ content (`INTENTS` array near the top of the script) is pulled directly from the actual resume — real projects, real tech stack, real certifications, real contact email. No placeholders left to fill in.
 
 ## Stack
 HTML, CSS, vanilla JS. TF-IDF + cosine similarity implemented from scratch — no NLP library needed for a corpus this size.
