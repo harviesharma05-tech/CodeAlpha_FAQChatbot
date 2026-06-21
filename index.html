@@ -284,16 +284,16 @@ const INTENTS = [
   {
     id: 'greeting',
     examples: ['hi', 'hello', 'hey', 'good morning', 'yo', 'hii', 'hey there'],
-    answer: "Hey! I'm Harvi's portfolio assistant. Ask about projects, tech stack, education, or internships — or tap a suggestion below.",
+    answer: "Hey! I'm Harvie's portfolio assistant. Ask about projects, tech stack, education, certifications, or internships — or tap a suggestion below.",
   },
   {
     id: 'projects',
     examples: [
       'what projects have you built', 'show me your projects', 'what have you made',
-      'tell me about your work', 'your portfolio projects', "what's on your github",
-      'what have you coded',
+      'tell me about your work', 'your portfolio projects',
+      'what have you coded', 'tell me about hire or die', 'what is aria chatbot',
     ],
-    answer: "Harvi's portfolio includes a language translator, an audio visualizer, an AI music generator trained on classical piano data, and a Python CLI trading bot for Binance Futures — plus this chatbot, all built from scratch.",
+    answer: "Eight so far: Hire or Die (a browser game with levels, achievements, a leaderboard, and character selection), the Aria AI chatbot, a weather app, an expense tracker, a timer-based quiz app, a movie explorer, this portfolio site, and a to-do list app — plus the CodeAlpha internship projects, including this very chatbot.",
   },
   {
     id: 'tech_stack',
@@ -301,7 +301,7 @@ const INTENTS = [
       'what languages do you know', 'your tech stack', 'what technologies do you use',
       'what programming languages', "what's your stack", 'do you know python',
     ],
-    answer: "Mainly Python, JavaScript, C, and C#, with hands-on work in TensorFlow/Keras, Flutter, Node.js, and SQL.",
+    answer: "Python, C, JavaScript, and SQL, plus HTML/CSS and Git/GitHub for web work — with data structures, OOP, and algorithms as the core CS foundation underneath all of it.",
   },
   {
     id: 'codealpha',
@@ -317,7 +317,15 @@ const INTENTS = [
       "what's your educational background", 'where do you study', 'which college do you go to',
       'your degree', 'what year are you in', 'where do you go to university',
     ],
-    answer: "First-year B.Tech in Computer Science & Engineering at Graphic Era (Deemed to be University), Dehradun.",
+    answer: "First-year B.Tech in Computer Science & Engineering at Graphic Era University, Dehradun (2025–2029), after CBSE Class XII with Physics, Chemistry, Maths, and Computer Science.",
+  },
+  {
+    id: 'certifications',
+    examples: [
+      'do you have any certifications', 'what certifications do you have', 'hackerrank certificates',
+      'are you certified in anything', 'your certifications',
+    ],
+    answer: "Four HackerRank certifications — Problem Solving, SQL, and JavaScript, all at Intermediate level — plus a Software Engineer Role Certification and a Python Using AI workshop.",
   },
   {
     id: 'open_to_work',
@@ -333,22 +341,14 @@ const INTENTS = [
       'have you worked with ai', 'machine learning experience', 'ai projects',
       'do you know machine learning', 'have you trained a model',
     ],
-    answer: "Yes — built an LSTM model trained on Bach chorales to generate original melodies. This chatbot itself uses TF-IDF and cosine similarity for matching, no external AI API.",
-  },
-  {
-    id: 'mobile_experience',
-    examples: [
-      'do you have mobile app experience', 'have you built apps', 'flutter experience',
-      'any mobile development', 'have you used flutter',
-    ],
-    answer: "Built a Flutter app end-to-end for a mobile internship challenge, including working through some tricky platform compatibility issues to ship a release build.",
+    answer: "Built the Aria AI chatbot and completed a Python Using AI workshop, and currently deep in the CodeAlpha AI internship — including an LSTM that generates original melodies, and this very chatbot, which matches questions with TF-IDF and cosine similarity, no external AI API.",
   },
   {
     id: 'github',
     examples: [
       "what's your github", 'github username', 'where can i see your code', 'link to your github',
     ],
-    answer: 'github.com/harviesharma05-tech — all projects, including this one, are public there.',
+    answer: 'github.com/harviesharma — all projects, including this one, are public there.',
   },
   {
     id: 'interests',
@@ -363,19 +363,19 @@ const INTENTS = [
     examples: [
       'how can i contact you', 'your email', 'get in touch', 'how do i reach you', 'contact info',
     ],
-    answer: 'Best way to reach out is through GitHub or LinkedIn.',
+    answer: 'Best reached by email — harviesharma05@gmail.com — or through GitHub.',
   },
   {
     id: 'proud_of',
     examples: [
       "what's your favorite project", 'what are you most proud of', 'best project you have built',
     ],
-    answer: "Hard to pick one — the AI music generator was the most technically stretching, the audio visualizer was the most fun to build.",
+    answer: "Tough call, but Hire or Die and the Aria AI chatbot probably took the most genuine engineering — full features built end-to-end, not a tutorial walk-through.",
   },
 ];
 
-const FALLBACK = "I don't have an answer for that one yet. Try asking about projects, tech stack, education, or internships — or tap a suggestion below.";
-const SUGGESTED_CHIPS = ['What have you built?', "What's your tech stack?", 'Open to internships?', 'Tell me about CodeAlpha'];
+const FALLBACK = "I don't have an answer for that one yet. Try asking about projects, tech stack, education, certifications, or internships — or tap a suggestion below.";
+const SUGGESTED_CHIPS = ['What have you built?', "What's your tech stack?", 'Any certifications?', 'Open to internships?', 'Tell me about CodeAlpha'];
 
 /* ---------- 2. Preprocess: tokenize + clean ---------- */
 const STOPWORDS = new Set([
